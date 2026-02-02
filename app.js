@@ -493,11 +493,11 @@ function orderOnWhatsApp(productTitle = "", productLink = ""){
     msgLines.push(`Ürün Linki: ${productLink}`);
   }
 
-  if(pageData.flashNew || pageData.flashOld){
-    msgLines.push(`Anlık Kampanya: ${pageData.flashOld ? ("Eski: " + pageData.flashOld) : ""}${(pageData.flashOld && pageData.flashNew) ? " | " : ""}${pageData.flashNew ? ("Yeni: " + pageData.flashNew) : ""}`);
-  }
+  //if(pageData.flashNew || pageData.flashOld){
+  // msgLines.push(`Anlık Kampanya: ${pageData.flashOld ? ("Eski: " + pageData.flashOld) : ""}${(pageData.flashOld && pageData.flashNew) ? " | " : ""}${pageData.flashNew ? ("Yeni: " + pageData.flashNew) : ""}`);
+  //}
 
-  msgLines.push(`Katalog ID: ${currentID}`);
+  //msgLines.push(`Katalog ID: ${currentID}`);
 
   const msg = encodeURIComponent(msgLines.join("\n"));
   const url = `https://wa.me/${num}?text=${msg}`;
