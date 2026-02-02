@@ -16,10 +16,10 @@
     <div id="notification-toast" class="toast">
         <div class="toast-icon"><i class="fas fa-bell"></i></div>
         <div class="toast-content">
-            <div class="toast-title">Yeni Fırsat!</div>
-            <div class="toast-msg">Yeni bir kampanya eklendi.</div>
+            <div class="toast-title">Fırsat Yakala!</div>
+            <div class="toast-msg">Yeni kampanya yayında.</div>
         </div>
-        <button class="toast-action" onclick="scrollToFlash()">İNCELE</button>
+        <button class="toast-action" onclick="scrollToFlash()">GÖSTER</button>
     </div>
 
     <div class="container">
@@ -43,22 +43,22 @@
 
         <div id="loading-screen">
             <div class="spinner"></div>
-            <p>KATALOG HAZIRLANIYOR</p>
+            <p>SİSTEM HAZIRLANIYOR</p>
         </div>
 
         <div id="content-panel" style="display: none;">
             
             <div class="dock-grid">
-                <div class="dock-item" onclick="actionSaveContact()">
-                    <div class="icon-box"><i class="fas fa-user-plus"></i></div>
-                    <span>Kaydet</span>
+                <div class="dock-item" onclick="openInstallModal()">
+                    <div class="icon-box"><i class="fas fa-qrcode"></i></div>
+                    <span>Kart / Ekle</span>
                 </div>
                 <div class="dock-item" onclick="openGallery('products')">
                     <div class="icon-box"><i class="fas fa-th-large"></i></div>
                     <span>Ürünler</span>
                 </div>
                 <div class="dock-item" onclick="openGallery('showcase')">
-                    <div class="icon-box"><i class="fas fa-play"></i></div>
+                    <div class="icon-box"><i class="fas fa-play-circle"></i></div>
                     <span>Vitrin</span>
                 </div>
                 <div class="dock-item highlight" onclick="openFeatured()">
@@ -68,7 +68,10 @@
             </div>
 
             <div class="section-title">
-                <i class="fas fa-bolt" style="color:#eab308"></i> GÜNÜN FIRSATI
+                <span><i class="fas fa-bolt" style="color:#eab308"></i> GÜNÜN FIRSATI</span>
+                <button id="btn-review" class="review-chip" onclick="goReview()" style="display:none">
+                    <i class="fas fa-star"></i> Değerlendir
+                </button>
             </div>
             
             <div class="flash-card glass-panel" id="flash-section">
@@ -88,7 +91,7 @@
                 <div class="price-container">
                     <div class="price-box old">
                         <span class="lbl">Eski</span>
-                        <span class="val" id="ui-price-old">-</span>
+                        <span class="val strike" id="ui-price-old">-</span>
                     </div>
                     <div class="price-box new">
                         <span class="lbl">Fırsat</span>
@@ -97,7 +100,7 @@
                 </div>
 
                 <button class="btn-primary" onclick="actionWhatsApp(true)">
-                    <i class="fab fa-whatsapp"></i> Fırsat İçin Bilgi Al
+                    <i class="fab fa-whatsapp"></i> Bilgi ve Sipariş
                 </button>
             </div>
 
@@ -105,7 +108,7 @@
                 <i class="fas fa-cog"></i>
             </div>
             <footer class="footer">
-                POWERED BY FTHLABZ <br> PROFESSIONAL EDITION
+                POWERED BY KODLAMA DESTEĞİ
             </footer>
 
         </div> <div id="setup-panel" class="setup-modal glass-panel" style="display: none;">
@@ -117,27 +120,26 @@
             <div class="form-group">
                 <label>Firma Adı</label> <input type="text" id="in-title">
                 <label>Slogan</label> <input type="text" id="in-slogan">
-                <label>Telefon (905xxxxxxxxx)</label> <input type="text" id="in-phone">
+                <label>Telefon</label> <input type="text" id="in-phone">
                 <label>Instagram</label> <input type="text" id="in-insta">
                 <label>Konum Linki</label> <input type="text" id="in-map">
+                <label>Google Yorum Linki</label> <input type="text" id="in-review">
                 
                 <hr>
-                
-                <label>Ürünler (Klasör ID/Link)</label> <input type="text" id="in-plink">
-                <label>Vitrin (Klasör ID/Link)</label> <input type="text" id="in-vlink">
-                <label>Öne Çıkan (Dosya ID/Link)</label> <input type="text" id="in-daily">
+                <label>Ürünler (Klasör)</label> <input type="text" id="in-plink">
+                <label>Vitrin (Klasör)</label> <input type="text" id="in-vlink">
+                <label>Öne Çıkan (Dosya)</label> <input type="text" id="in-daily">
                 
                 <hr>
-                
-                <label style="color:var(--gold)">KAMPANYA AYARLARI</label>
-                <label>Resim Linki</label> <input type="text" id="in-fimg">
-                <label>Etiket (Örn: Flaş İndirim)</label> <input type="text" id="in-ftag">
+                <label style="color:var(--gold)">KAMPANYA</label>
+                <label>Resim</label> <input type="text" id="in-fimg">
+                <label>Etiket</label> <input type="text" id="in-ftag">
                 <label>Eski Fiyat</label> <input type="text" id="in-fold">
                 <label>Yeni Fiyat</label> <input type="text" id="in-fnew">
                 
                 <label>Yönetici Şifresi</label> <input type="password" id="in-pass">
                 
-                <button class="btn-primary" onclick="saveSettings()">KAYDET VE YENİLE</button>
+                <button class="btn-primary" onclick="saveSettings()">KAYDET</button>
             </div>
         </div>
 
@@ -149,8 +151,41 @@
                 </button>
                 <span id="gallery-title">GALERİ</span>
             </div>
-            
             <div id="gallery-grid" class="gallery-body"></div>
+        </div>
+    </div>
+
+    <div id="install-modal" class="modal-overlay" style="align-items: center; justify-content: center;">
+        <div class="card-modal glass-panel">
+            <div class="setup-header">
+                <h3>KART / REHBER</h3>
+                <button class="close-btn" onclick="closeInstallModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-inner">
+                
+                <div class="action-box">
+                    <div class="act-head"><i class="fas fa-address-book"></i> Rehbere Kaydet</div>
+                    <p class="act-desc">İşletme kartını telefon rehberine tek tuşla ekle.</p>
+                    <button class="btn-secondary" onclick="actionSaveContact()">VCF İNDİR</button>
+                </div>
+
+                <div class="action-box">
+                    <div class="act-head"><i class="fas fa-mobile-alt"></i> Uygulama Olarak Ekle</div>
+                    <p class="act-desc" id="install-text">Cihaz tanınıyor...</p>
+                    
+                    <div id="ios-steps" class="steps-box" style="display:none">
+                        <div class="step">1. Alttaki <b>Paylaş</b> ikonuna bas <i class="fas fa-share-square"></i></div>
+                        <div class="step">2. <b>Ana Ekrana Ekle</b>'yi seç <i class="fas fa-plus-square"></i></div>
+                        <div class="step">3. Sağ üstten <b>Ekle</b> de.</div>
+                    </div>
+
+                    <div id="android-steps" class="steps-box" style="display:none">
+                        <div class="step">1. Sağ üstteki <b>3 Nokta</b>'ya bas <i class="fas fa-ellipsis-v"></i></div>
+                        <div class="step">2. <b>Ana Ekrana Ekle</b> veya <b>Uygulamayı Yükle</b>'yi seç.</div>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
 
