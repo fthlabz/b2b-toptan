@@ -25,6 +25,7 @@
           <div class="company-name" id="companyName">...</div>
           <div class="company-slogan" id="companySlogan">...</div>
         </div>
+        <button class="daily-top-btn" onclick="openDaily()" id="btnDaily"><i class="fas fa-star"></i> Öne Çıkan</button>
         <div class="header-actions">
           <button class="header-btn whatsapp" onclick="orderOnWhatsApp()"><i class="fab fa-whatsapp"></i> Bilgi Al</button>
           <button class="header-btn phone" onclick="window.open(`tel:${normalizeTel(pageData.phone || pageData.whats || '')}`)"><i class="fas fa-phone"></i></button>
@@ -135,10 +136,13 @@
           </div>
         </div>
         <div class="cert-line"></div>
-        <div class="cert-note">
-          Bu sayfa, işletmeye özel tanımlanmış bir QR mini web sitedir.
-Sunulan ürün ve fiyatlar, seçili müşterilere özel olarak paylaşılmaktadır.
-İşletme, içeriklerde değişiklik yapma hakkını saklı tutar.
+        <div class="vcard-shell" onclick="openCardModal()">
+          <div class="vcard-chip">V-Card</div>
+          <div class="vcard-body">
+            <div class="vcard-title" id="vcardName">İşletme Kartı</div>
+            <div class="vcard-sub">Dijital kartvizit • Rehbere Kaydet</div>
+          </div>
+          <div class="vcard-icon"><i class="fas fa-id-card"></i></div>
         </div>
       </div>
 
@@ -155,17 +159,12 @@ Sunulan ürün ve fiyatlar, seçili müşterilere özel olarak paylaşılmaktad�
           <div class="dock-btn" onclick="openGallery('video')" id="btnAds" title="Videolu Reklamlar">
             <i class="fas fa-store"></i>
           </div>
-
-          <div class="dock-btn daily" onclick="openDaily()" id="btnDaily" title="Ürün tanıtımı">
-            <i class="fas fa-star"></i>
-          </div>
         </div>
 
         <div class="dock-labels">
           <span>Dijital Kart</span>
           <span>Ürünlerimiz</span>
           <span>Vitrin</span>
-          <span>Öne Çıkan</span>
         </div>
       </div>
 
@@ -204,19 +203,24 @@ Sunulan ürün ve fiyatlar, seçili müşterilere özel olarak paylaşılmaktad�
           <button class="btn-whatsapp" onclick="orderOnWhatsApp()">WhatsApp’tan Bilgi Al</button>
         </div>
 
+        <div class="grid-section" id="productsSection">
+          <div class="grid-title">Ürünlerimiz</div>
+          <div class="grid-list" id="productGrid"></div>
+        </div>
+
+        <div class="grid-section" id="vitrinSection">
+          <div class="grid-title">Vitrin</div>
+          <div class="grid-list" id="vitrinGrid"></div>
+        </div>
+
+        <button class="review-btn" onclick="pageData.review ? window.open(pageData.review, '_blank', 'noopener,noreferrer') : openCardModal()">Bizi Değerlendir – Google Yorum</button>
+
         <div class="secondary-actions">
           <button class="secondary-btn" onclick="openCardModal()">
             <span class="secondary-icon"><i class="fas fa-bookmark"></i></span>
             <span class="secondary-text">
               <strong>Kataloğu Kaydet</strong>
               <small>Linki Paylaş • Masaüstüne Ekle</small>
-            </span>
-          </button>
-          <button class="secondary-btn review-secondary" onclick="pageData.review ? window.open(pageData.review, '_blank', 'noopener,noreferrer') : openCardModal()">
-            <span class="secondary-icon"><i class="fab fa-google"></i></span>
-            <span class="secondary-text">
-              <strong>Bizi Değerlendir</strong>
-              <small>Google Yorum</small>
             </span>
           </button>
         </div>
@@ -233,6 +237,14 @@ Sunulan ürün ve fiyatlar, seçili müşterilere özel olarak paylaşılmaktad�
       <span id="galTitle">Albüm</span>
     </div>
     <div class="slider-container" id="slider-track"></div>
+  </div>
+
+  <div id="mediaModal">
+    <div class="media-modal-header">
+      <div class="close-gallery" onclick="closeMediaModal()"><i class="fas fa-chevron-left"></i> Kapat</div>
+      <span class="media-title" id="mediaModalTitle">Ürün</span>
+    </div>
+    <div class="media-modal-body" id="mediaModalBody"></div>
   </div>
 
   <div id="cardModal">
