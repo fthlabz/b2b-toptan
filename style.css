@@ -1741,3 +1741,14 @@ body{
   display: none !important;
   pointer-events: none !important;
 }
+
+/* FIX: vcard yazıları certificate içindeki "certificate div" kuralı yüzünden grileşiyordu */
+.certificate .vcard-shell .vcard-title,
+.certificate .vcard-shell #vcardName{
+  color: #ffffff !important;
+}
+
+.certificate .vcard-shell .vcard-sub,
+.certificate .vcard-shell #vcardSub{
+  color: rgba(255,255,255,.85) !important;
+}
