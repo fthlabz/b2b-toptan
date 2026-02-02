@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dijital Katalog</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="notification-toast" class="toast">
+        <div class="toast-icon"><i class="fas fa-bell"></i></div>
+        <div class="toast-content">
+            <div class="toast-title">Yeni Fırsat!</div>
+            <div class="toast-msg">Yeni bir kampanya eklendi.</div>
+        </div>
+        <button class="toast-action" onclick="scrollToFlash()">İNCELE</button>
+    </div>
+
+    <div class="container">
+        
+        <header class="header glass-panel">
+            <div class="logo-area">
+                <i class="fas fa-layer-group logo-icon"></i>
+            </div>
+            <h1 class="company-name" id="ui-company">Yükleniyor...</h1>
+            <p class="company-slogan" id="ui-slogan">...</p>
+            
+            <div class="header-actions">
+                <button class="btn-icon wp" onclick="actionWhatsApp()">
+                    <i class="fab fa-whatsapp"></i> WhatsApp
+                </button>
+                <button class="btn-icon call" onclick="actionCall()">
+                    <i class="fas fa-phone"></i> Ara
+                </button>
+            </div>
+        </header>
+
+        <div id="loading-screen">
+            <div class="spinner"></div>
+            <p>KATALOG HAZIRLANIYOR</p>
+        </div>
+
+        <div id="content-panel" style="display: none;">
+            
+            <div class="dock-grid">
+                <div class="dock-item" onclick="actionSaveContact()">
+                    <div class="icon-box"><i class="fas fa-user-plus"></i></div>
+                    <span>Kaydet</span>
+                </div>
+                <div class="dock-item" onclick="openGallery('products')">
+                    <div class="icon-box"><i class="fas fa-th-large"></i></div>
+                    <span>Ürünler</span>
+                </div>
+                <div class="dock-item" onclick="openGallery('showcase')">
+                    <div class="icon-box"><i class="fas fa-play"></i></div>
+                    <span>Vitrin</span>
+                </div>
+                <div class="dock-item highlight" onclick="openFeatured()">
+                    <div class="icon-box"><i class="fas fa-star"></i></div>
+                    <span>Öne Çıkan</span>
+                </div>
+            </div>
+
+            <div class="section-title">
+                <i class="fas fa-bolt" style="color:#eab308"></i> GÜNÜN FIRSATI
+            </div>
+            
+            <div class="flash-card glass-panel" id="flash-section">
+                <div class="flash-header">
+                    <span class="badge-live">CANLI</span>
+                    <span class="flash-tag" id="ui-flash-tag">KAMPANYA</span>
+                </div>
+
+                <div class="flash-image-wrapper">
+                    <img id="ui-flash-img" alt="Fırsat" style="display: none;">
+                    <div id="ui-flash-placeholder" class="placeholder-box">
+                        <i class="fas fa-image"></i>
+                        <span>Görsel Yok</span>
+                    </div>
+                </div>
+
+                <div class="price-container">
+                    <div class="price-box old">
+                        <span class="lbl">Eski</span>
+                        <span class="val" id="ui-price-old">-</span>
+                    </div>
+                    <div class="price-box new">
+                        <span class="lbl">Fırsat</span>
+                        <span class="val" id="ui-price-new">-</span>
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="actionWhatsApp(true)">
+                    <i class="fab fa-whatsapp"></i> Fırsat İçin Bilgi Al
+                </button>
+            </div>
+
+            <div class="admin-trigger" onclick="toggleAdminPanel()">
+                <i class="fas fa-cog"></i>
+            </div>
+            <footer class="footer">
+                POWERED BY FTHLABZ <br> PROFESSIONAL EDITION
+            </footer>
+
+        </div> <div id="setup-panel" class="setup-modal glass-panel" style="display: none;">
+            <div class="setup-header">
+                <h3>Yönetici Paneli</h3>
+                <button class="close-btn" onclick="toggleAdminPanel(false)"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="form-group">
+                <label>Firma Adı</label> <input type="text" id="in-title">
+                <label>Slogan</label> <input type="text" id="in-slogan">
+                <label>Telefon (905xxxxxxxxx)</label> <input type="text" id="in-phone">
+                <label>Instagram</label> <input type="text" id="in-insta">
+                <label>Konum Linki</label> <input type="text" id="in-map">
+                
+                <hr>
+                
+                <label>Ürünler (Klasör ID/Link)</label> <input type="text" id="in-plink">
+                <label>Vitrin (Klasör ID/Link)</label> <input type="text" id="in-vlink">
+                <label>Öne Çıkan (Dosya ID/Link)</label> <input type="text" id="in-daily">
+                
+                <hr>
+                
+                <label style="color:var(--gold)">KAMPANYA AYARLARI</label>
+                <label>Resim Linki</label> <input type="text" id="in-fimg">
+                <label>Etiket (Örn: Flaş İndirim)</label> <input type="text" id="in-ftag">
+                <label>Eski Fiyat</label> <input type="text" id="in-fold">
+                <label>Yeni Fiyat</label> <input type="text" id="in-fnew">
+                
+                <label>Yönetici Şifresi</label> <input type="password" id="in-pass">
+                
+                <button class="btn-primary" onclick="saveSettings()">KAYDET VE YENİLE</button>
+            </div>
+        </div>
+
+    </div> <div id="gallery-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="back-btn" onclick="closeGallery()">
+                    <i class="fas fa-arrow-left"></i> Geri
+                </button>
+                <span id="gallery-title">GALERİ</span>
+            </div>
+            
+            <div id="gallery-grid" class="gallery-body"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
