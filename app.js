@@ -1,4 +1,3 @@
-
 const API_URL = "https://script.google.com/macros/s/AKfycbyvtvYWLmkq8AqmCEhf_FP5fYLaliFpz_p-Jx4_miEM1vgCvHIM8qDS06A5kKP9F6W0ZA/exec";
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -104,8 +103,17 @@ window.onload = function() {
       document.getElementById('companyName').innerText = pageData.company || "Dijital Katalog";
       document.getElementById('companySlogan').innerText = pageData.slogan || "";
       const vcardName = document.getElementById('vcardName');
+      const vcardSlogan = document.getElementById('vcardSlogan');
+      const vcardPhone = document.getElementById('vcardPhone');
+      // EDIT: v-card text binding
       if(vcardName){
         vcardName.innerText = pageData.company || "İşletme Kartı";
+      }
+      if(vcardSlogan){
+        vcardSlogan.innerText = pageData.slogan || "Kurumsal Dijital Kart";
+      }
+      if(vcardPhone){
+        vcardPhone.innerText = pageData.phone || pageData.whats || "+90 5xx xxx xx xx";
       }
 
       if (!pageData.pLink) document.getElementById('btnProducts').style.display='none';
@@ -164,11 +172,13 @@ function renderFlash(){
   }
 }
 
-function buildGridPlaceholders(label){
+// EDIT: grid placeholders
+function buildGridPlaceholders(label, context){
   const cards = [];
   for(let i = 0; i < 6; i++){
+    const extraClass = context === 'vitrin' ? ' vitrin-card' : '';
     cards.push(`
-      <div class="grid-card placeholder-card">
+      <div class="grid-card placeholder-card${extraClass}">
         <div class="grid-media placeholder-media"></div>
         <div class="grid-caption">${label}</div>
       </div>
@@ -200,14 +210,14 @@ function renderGrids(){
 
 function renderGrid(context, link, grid, label){
   if(!grid) return;
-  grid.innerHTML = buildGridPlaceholders(label);
+  grid.innerHTML = buildGridPlaceholders(label, context);
   if(!link) return;
 
   fetch(API_URL + "?action=getFiles&url=" + encodeURIComponent(link))
     .then(res => res.json())
     .then(data => {
       if(data.status === "error" || !data.files || data.files.length === 0){
-        grid.innerHTML = buildGridPlaceholders(label);
+        grid.innerHTML = buildGridPlaceholders(label, context);
         return;
       }
 
@@ -215,10 +225,30 @@ function renderGrid(context, link, grid, label){
       data.files.forEach(file => {
         const card = document.createElement('button');
         card.type = 'button';
-        card.className = 'grid-card';
+        card.className = context === 'vitrin' ? 'grid-card vitrin-card' : 'grid-card';
         const name = (file.name || "").trim();
 
-        if(file.type === 'image'){
+        if(context === 'vitrin'){
+          // EDIT: vitrin cards open existing gallery
+          if(file.type === 'image'){
+            const proxyUrl = "https://lh3.googleusercontent.com/d/" + file.id + "=s1200";
+            card.innerHTML = `
+              <div class="grid-media vitrin-media">
+                <img src="${proxyUrl}" alt="">
+                <span class="vitrin-play"><i class="fas fa-play"></i></span>
+              </div>
+              <div class="grid-caption">${escapeHtml(name || label)}</div>
+            `;
+          } else {
+            card.innerHTML = `
+              <div class="grid-media vitrin-media">
+                <span class="vitrin-play"><i class="fas fa-play"></i></span>
+              </div>
+              <div class="grid-caption">${escapeHtml(name || label)}</div>
+            `;
+          }
+          card.addEventListener('click', () => openGallery('video'));
+        } else if(file.type === 'image'){
           const proxyUrl = "https://lh3.googleusercontent.com/d/" + file.id + "=s1200";
           card.innerHTML = `
             <div class="grid-media">
@@ -255,7 +285,7 @@ function renderGrid(context, link, grid, label){
       });
     })
     .catch(() => {
-      grid.innerHTML = buildGridPlaceholders(label);
+      grid.innerHTML = buildGridPlaceholders(label, context);
     });
 }
 
