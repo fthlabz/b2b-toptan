@@ -123,6 +123,14 @@ function driveThumb(fileId, size=1200){
   return `https://drive.google.com/thumbnail?id=${fileId}&sz=w${size}`;
 }
 
+function driveNameToTitle(name, fallback){
+  const cleaned = (name || "").trim();
+  if(!cleaned) return fallback;
+  const withoutExt = cleaned.replace(/\.[^/.]+$/, "");
+  const spaced = withoutExt.replace(/[_-]+/g, " ").trim();
+  return spaced || fallback;
+}
+
 function renderFlash(){
   const img = document.getElementById('flashImg');
   const ph  = document.getElementById('flashPlaceholder');
@@ -208,7 +216,7 @@ function renderGrid(context, link, grid, label){
 
         const name = (file.name || "").trim();
         const meta = parseProductMeta(name);
-        const productTitle = (meta && meta.title) ? meta.title : (name || label);
+        const productTitle = driveNameToTitle((meta && meta.title) ? meta.title : name, label);
 
         if(context === 'vitrin'){
           const thumb = driveThumb(file.id, 1200);
@@ -217,7 +225,7 @@ function renderGrid(context, link, grid, label){
               <img src="${thumb}" alt="">
               <span class="vitrin-play"><i class="fas fa-play"></i></span>
             </div>
-            <div class="grid-caption">${escapeHtml(name || label)}</div>
+            <div class="grid-caption">${escapeHtml(driveNameToTitle(name, label))}</div>
           `;
           card.addEventListener('click', () => openGallery('video'));
           grid.appendChild(card);
@@ -320,7 +328,7 @@ function renderFeatured(){
           card.type = 'button';
           card.className = 'grid-card';
 
-          const name = (file.name || "").trim() || "Öne Çıkan";
+          const name = driveNameToTitle(file.name, "Öne Çıkan");
           const thumb = driveThumb(file.id, 1400);
 
           card.innerHTML = `
@@ -483,7 +491,7 @@ function orderOnWhatsApp(productTitle = "", productLink = ""){
   }
 
   const msgLines = [];
-  msgLines.push(`Merhaba`);
+  msgLines.push(`Merhaba, ${pageData.company || "Şirket"} hakkında bilgi almak istiyorum.`);
 
   //if(productTitle){
   //  msgLines.push(`Ürün: ${productTitle}`);
