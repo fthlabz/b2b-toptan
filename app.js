@@ -1,5 +1,3 @@
-// app.js
-
 const API_URL = "https://script.google.com/macros/s/AKfycbyvtvYWLmkq8AqmCEhf_FP5fYLaliFpz_p-Jx4_miEM1vgCvHIM8qDS06A5kKP9F6W0ZA/exec";
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -47,17 +45,6 @@ function buildProductMeta(name){
   return `<div class="meta">${titleHtml}${codeHtml}${priceHtml}</div>`;
 }
 
-// EDIT: clickable helper (div cards)
-function makeClickable(el, handler){
-  el.addEventListener('click', handler);
-  el.addEventListener('keydown', (e) => {
-    if(e.key === 'Enter' || e.key === ' '){
-      e.preventDefault();
-      handler();
-    }
-  });
-}
-
 window.onload = function() {
   if (!currentID) { document.getElementById('loading').innerHTML = "ID Yok"; return; }
   document.getElementById('certId').innerText = currentID;
@@ -79,12 +66,8 @@ window.onload = function() {
         document.getElementById('companyName').innerText = "Güncelleme Gerekli";
         document.getElementById('companySlogan').innerText = "Eski şifreli kayıt";
         document.getElementById('view-panel').style.display = 'block';
-        const bp = document.getElementById('btnProducts');
-        const ba = document.getElementById('btnAds');
-        if(bp) bp.style.display='none';
-        if(ba) ba.style.display='none';
-        const fb = document.getElementById('flashBox');
-        if(fb) fb.style.display='none';
+
+        document.getElementById('flashBox').style.display='none';
         return;
       }
 
@@ -118,20 +101,14 @@ window.onload = function() {
       document.getElementById('companyName').innerText = pageData.company || "Dijital Katalog";
       document.getElementById('companySlogan').innerText = pageData.slogan || "";
 
-      // EDIT: V-Card = sadece şirket adı + Digital V Card
+      // vcard: sadece isim
       const vcardName = document.getElementById('vcardName');
-      const vcardSub = document.getElementById('vcardSub');
       if(vcardName) vcardName.innerText = pageData.company || "İşletme";
-      if(vcardSub) vcardSub.innerText = "Digital V Card";
-
-      const bp = document.getElementById('btnProducts');
-      const ba = document.getElementById('btnAds');
-      if (bp && !pageData.pLink) bp.style.display='none';
-      if (ba && !pageData.vLink) ba.style.display='none';
 
       renderFlash();
       renderGrids();
-      renderFeatured(); // EDIT
+      renderFeatured();
+
       document.getElementById('view-panel').style.display = 'block';
     })
     .catch(() => alert("Bağlantı Hatası: URL'yi kontrol et."));
@@ -142,14 +119,16 @@ function getDriveId(link){
   return m ? m[0] : "";
 }
 
+function driveThumb(fileId, size=1200){
+  return `https://drive.google.com/thumbnail?id=${fileId}&sz=w${size}`;
+}
+
 function renderFlash(){
   const img = document.getElementById('flashImg');
   const ph  = document.getElementById('flashPlaceholder');
   const oldT = document.getElementById('oldPriceText');
   const newT = document.getElementById('newPriceText');
   const title = document.getElementById('flashTitle');
-  const flashState = document.getElementById('flashState');
-  if(!img || !ph || !oldT || !newT || !title) return;
 
   const label = (pageData.flashLabel || "FLAŞ FIRSAT").trim();
   title.innerHTML = `<i class="fas fa-bolt"></i> ${escapeHtml(label).toUpperCase()}`;
@@ -167,25 +146,12 @@ function renderFlash(){
     img.style.display = 'none';
     ph.style.display = 'flex';
   }
-
-  // mevcut mantık kalsın (CSS zaten gizli)
-  if(flashState){
-    if(pageData.review){
-      flashState.style.display = 'inline-flex';
-      flashState.innerText = "⭐ Değerlendir & Puan Ver";
-      flashState.style.cursor = 'pointer';
-      flashState.onclick = () => window.open(pageData.review, "_blank", "noopener,noreferrer");
-    } else {
-      flashState.style.display = 'none';
-      flashState.onclick = null;
-    }
-  }
 }
 
-// EDIT: grid placeholders
+/* GRID PLACEHOLDERS */
 function buildGridPlaceholders(label, context){
   const cards = [];
-  const count = context === 'vitrin' ? 2 : 6;
+  const count = context === 'featured' ? 4 : 6;
   for(let i = 0; i < count; i++){
     const extraClass = context === 'vitrin' ? ' vitrin-card' : '';
     cards.push(`
@@ -201,6 +167,7 @@ function buildGridPlaceholders(label, context){
 function renderGrids(){
   const productGrid = document.getElementById('productGrid');
   const vitrinGrid = document.getElementById('vitrinGrid');
+
   if(productGrid){
     renderGrid("product", pageData.pLink, productGrid, "Ürün");
   }
@@ -221,6 +188,7 @@ function renderGrids(){
 
 function renderGrid(context, link, grid, label){
   if(!grid) return;
+
   grid.innerHTML = buildGridPlaceholders(label, context);
   if(!link) return;
 
@@ -234,76 +202,90 @@ function renderGrid(context, link, grid, label){
 
       grid.innerHTML = "";
       data.files.forEach(file => {
-        const card = document.createElement('div'); // EDIT: button yerine div
+        const card = document.createElement('button');
+        card.type = 'button';
         card.className = context === 'vitrin' ? 'grid-card vitrin-card' : 'grid-card';
-        card.setAttribute('role','button');
-        card.tabIndex = 0;
 
         const name = (file.name || "").trim();
+        const meta = parseProductMeta(name);
+        const productTitle = (meta && meta.title) ? meta.title : (name || label);
 
         if(context === 'vitrin'){
-          const proxyUrl = file.type === 'image'
-            ? ("https://lh3.googleusercontent.com/d/" + file.id + "=s1200")
-            : "";
-
+          const thumb = driveThumb(file.id, 1200);
           card.innerHTML = `
             <div class="grid-media vitrin-media">
-              ${proxyUrl ? `<img src="${proxyUrl}" alt="">` : ``}
+              <img src="${thumb}" alt="">
               <span class="vitrin-play"><i class="fas fa-play"></i></span>
             </div>
             <div class="grid-caption">${escapeHtml(name || label)}</div>
           `;
-
-          // EDIT: vitrin tıklanınca vitrin butonu gibi açılacak
-          makeClickable(card, () => openGallery('video'));
+          card.addEventListener('click', () => openGallery('video'));
+          grid.appendChild(card);
+          return;
         }
-        else if(file.type === 'image'){
-          const proxyUrl = "https://lh3.googleusercontent.com/d/" + file.id + "=s1200";
-          const meta = parseProductMeta(name);
-          const offerText = meta?.title ? meta.title : (name || label);
 
+        // PRODUCTS
+        if(file.type === 'image'){
+          const proxyUrl = "https://lh3.googleusercontent.com/d/" + file.id + "=s1200";
           card.innerHTML = `
             <div class="grid-media">
               <img src="${proxyUrl}" alt="">
             </div>
-            <div class="grid-caption">${escapeHtml(meta?.title || name || label)}</div>
-            <button type="button" class="offer-btn"><i class="fab fa-whatsapp"></i> WhatsApp ile teklif al</button>
+            <div class="grid-caption">${escapeHtml(productTitle)}</div>
+            <button class="grid-cta" type="button" data-cta="wa">
+              <i class="fab fa-whatsapp"></i>
+              WhatsApp ile teklif al
+            </button>
           `;
 
-          // kart tık = detay
-          const metaHtml = buildProductMeta(name);
-          makeClickable(card, () => openMediaModal({
+          // kart tık: modal
+          card.addEventListener('click', () => openMediaModal({
             context,
-            title: name || label,
+            title: productTitle,
             mediaType: 'image',
             src: proxyUrl,
-            metaHtml
+            metaHtml: buildProductMeta(name)
           }));
 
-          // EDIT: teklif butonu sadece o ürün için
-          const btn = card.querySelector('.offer-btn');
-          if(btn){
-            btn.addEventListener('click', (e) => {
-              e.stopPropagation();
-              orderOnWhatsApp(offerText);
+          // buton tık: ürün bazlı whatsapp
+          const waBtn = card.querySelector('[data-cta="wa"]');
+          if(waBtn){
+            waBtn.addEventListener('click', (ev) => {
+              ev.preventDefault();
+              ev.stopPropagation();
+              orderOnWhatsApp(productTitle, proxyUrl);
             });
           }
-        }
-        else if(file.type === 'video'){
+        } else if(file.type === 'video'){
           const videoUrl = `https://drive.google.com/file/d/${file.id}/preview`;
+          const thumb = driveThumb(file.id, 1200);
           card.innerHTML = `
-            <div class="grid-media video">
-              <iframe src="${videoUrl}" allow="autoplay; fullscreen" allowfullscreen></iframe>
+            <div class="grid-media">
+              <img src="${thumb}" alt="">
             </div>
-            <div class="grid-caption">${escapeHtml(name || label)}</div>
+            <div class="grid-caption">${escapeHtml(productTitle)}</div>
+            <button class="grid-cta" type="button" data-cta="wa">
+              <i class="fab fa-whatsapp"></i>
+              WhatsApp ile teklif al
+            </button>
           `;
-          makeClickable(card, () => openMediaModal({
+
+          card.addEventListener('click', () => openMediaModal({
             context,
-            title: name || label,
+            title: productTitle,
             mediaType: 'video',
             src: videoUrl,
-            metaHtml: ""
+            metaHtml: buildProductMeta(name)
           }));
+
+          const waBtn = card.querySelector('[data-cta="wa"]');
+          if(waBtn){
+            waBtn.addEventListener('click', (ev) => {
+              ev.preventDefault();
+              ev.stopPropagation();
+              orderOnWhatsApp(productTitle, videoUrl);
+            });
+          }
         }
 
         grid.appendChild(card);
@@ -314,6 +296,93 @@ function renderGrid(context, link, grid, label){
     });
 }
 
+/* ÖNE ÇIKANLAR: 2'li grid (klasör veya tek dosya) */
+function renderFeatured(){
+  const grid = document.getElementById('featuredGrid');
+  if(!grid) return;
+
+  grid.innerHTML = buildGridPlaceholders("Öne Çıkan", "featured");
+
+  const link = (pageData.daily || "").trim();
+  if(!link){
+    grid.innerHTML = "";
+    return;
+  }
+
+  // Önce klasör gibi dene (getFiles)
+  fetch(API_URL + "?action=getFiles&url=" + encodeURIComponent(link))
+    .then(res => res.json())
+    .then(data => {
+      if(data && data.status !== "error" && Array.isArray(data.files) && data.files.length){
+        grid.innerHTML = "";
+        data.files.slice(0, 8).forEach(file => {
+          const card = document.createElement('button');
+          card.type = 'button';
+          card.className = 'grid-card';
+
+          const name = (file.name || "").trim() || "Öne Çıkan";
+          const thumb = driveThumb(file.id, 1400);
+
+          card.innerHTML = `
+            <div class="grid-media">
+              <img src="${thumb}" alt="">
+            </div>
+            <div class="grid-caption">${escapeHtml(name)}</div>
+          `;
+
+          // tık: overlay preview
+          card.addEventListener('click', () => openDrivePreview(file.id, name));
+          grid.appendChild(card);
+        });
+        return;
+      }
+
+      // Klasör değilse: tek dosya linki
+      renderFeaturedSingle(link, grid);
+    })
+    .catch(() => {
+      renderFeaturedSingle(link, grid);
+    });
+}
+
+function renderFeaturedSingle(link, grid){
+  const id = getDriveId(link);
+  if(!id){
+    grid.innerHTML = "";
+    return;
+  }
+  grid.innerHTML = "";
+
+  const card = document.createElement('button');
+  card.type = 'button';
+  card.className = 'grid-card';
+
+  const name = "Öne Çıkan";
+  const thumb = driveThumb(id, 1400);
+
+  card.innerHTML = `
+    <div class="grid-media">
+      <img src="${thumb}" alt="">
+    </div>
+    <div class="grid-caption">${escapeHtml(name)}</div>
+  `;
+  card.addEventListener('click', () => openDrivePreview(id, name));
+  grid.appendChild(card);
+}
+
+function openDrivePreview(fileId, title){
+  const overlay = document.getElementById('gallery-overlay');
+  const slider = document.getElementById('slider-track');
+  const galTitle = document.getElementById('galTitle');
+
+  if(galTitle) galTitle.innerText = title || "Öne Çıkan";
+  slider.innerHTML = "";
+  overlay.style.display = 'flex';
+
+  const playerUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+  slider.innerHTML = `<div class="slide"><div class="video-wrapper"><iframe src="${playerUrl}" allow="autoplay; fullscreen" allowfullscreen></iframe></div></div>`;
+}
+
 function openMediaModal(payload){
   const modal = document.getElementById('mediaModal');
   const body = document.getElementById('mediaModalBody');
@@ -321,6 +390,7 @@ function openMediaModal(payload){
   if(!modal || !body || !title) return;
 
   title.innerText = payload.title || (payload.context === 'vitrin' ? 'Vitrin' : 'Ürün');
+
   let mediaHtml = "";
   if(payload.mediaType === 'video'){
     mediaHtml = `<div class="modal-media video"><iframe src="${payload.src}" allow="autoplay; fullscreen" allowfullscreen></iframe></div>`;
@@ -329,15 +399,18 @@ function openMediaModal(payload){
   }
 
   const metaHtml = payload.metaHtml ? `<div class="modal-meta">${payload.metaHtml}</div>` : "";
-  // EDIT: modal teklif butonu da ürün bazlı çalışsın
-  const productTitle = (payload.title || "").trim();
-  const safeTitle = productTitle.replace(/'/g, "\\'");
+
+  // ÜRÜN bazlı WhatsApp butonu: ürün adını + görsel linkini gönder
   const actionHtml = payload.context === 'product'
-    ? `<button class="btn-whatsapp modal-whatsapp" onclick="orderOnWhatsApp('${safeTitle}')">WhatsApp ile teklif al</button>`
+    ? `<button class="btn-whatsapp modal-whatsapp" onclick="orderOnWhatsApp('${escapeJs(payload.title||'Ürün')}', '${escapeJs(payload.src||'')}')">WhatsApp Teklif Al</button>`
     : "";
 
   body.innerHTML = `${mediaHtml}${metaHtml}${actionHtml}`;
   modal.style.display = 'flex';
+}
+
+function escapeJs(s){
+  return (s||"").replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,' ');
 }
 
 function closeMediaModal(){
@@ -347,54 +420,7 @@ function closeMediaModal(){
   if(body) body.innerHTML = '';
 }
 
-// EDIT: Öne Çıkanlar (vitrinden sonra 2'li grid)
-function renderFeatured(){
-  const section = document.getElementById('featuredSection');
-  const grid = document.getElementById('featuredGrid');
-  if(!section || !grid) return;
-
-  if(!pageData.daily){
-    section.style.display = 'none';
-    return;
-  }
-  section.style.display = 'block';
-
-  const fileId = getDriveId(pageData.daily);
-  const thumb = fileId ? `https://lh3.googleusercontent.com/d/${fileId}=s1200` : "";
-
-  grid.innerHTML = `
-    <div class="featured-card" role="button" tabindex="0" id="featuredCard1">
-      <div class="featured-thumb">
-        ${thumb ? `<img src="${thumb}" alt="">` : `<i class="fas fa-star"></i>`}
-      </div>
-      <div class="featured-title">Öne Çıkan</div>
-      <div class="featured-sub">Dokun • Aç</div>
-    </div>
-  `;
-
-  const c1 = document.getElementById('featuredCard1');
-  if(c1){
-    makeClickable(c1, () => openDaily());
-  }
-}
-
-function openDaily(){
-  if(!pageData.daily) return;
-  const overlay = document.getElementById('gallery-overlay');
-  const slider = document.getElementById('slider-track');
-  document.getElementById('galTitle').innerText = "Öne Çıkanlar";
-  slider.innerHTML = "";
-  overlay.style.display = 'flex';
-
-  const fileId = getDriveId(pageData.daily);
-  if(fileId){
-    const playerUrl = `https://drive.google.com/file/d/${fileId}/preview`;
-    slider.innerHTML = `<div class="slide"><div class="video-wrapper"><iframe src="${playerUrl}" allow="autoplay; fullscreen" allowfullscreen></iframe></div></div>`;
-  } else {
-    slider.innerHTML = '<div class="error-msg">Link Hatalı</div>';
-  }
-}
-
+/* GALERİ */
 function openGallery(type) {
   let link = "";
   let title = "";
@@ -424,31 +450,15 @@ function openGallery(type) {
       data.files.forEach(file => {
         const slide = document.createElement('div');
         slide.className = 'slide';
+
         if(file.type === 'image') {
           const proxyUrl = "https://lh3.googleusercontent.com/d/" + file.id + "=s2000";
-          const name = (file.name || "").trim();
-          if(type === 'photo'){
-            const metaHtml = buildProductMeta(name);
-            slide.innerHTML = `
-              <div class="media-frame">
-                <img src="${proxyUrl}" loading="lazy">
-                ${metaHtml}
-              </div>
-            `;
-          } else {
-            slide.innerHTML = `
-              <div class="gallery-frame">
-                ${name ? `<div class="gallery-title">${escapeHtml(name)}</div>` : ""}
-                <div class="gallery-media">
-                  <img src="${proxyUrl}" loading="lazy">
-                </div>
-              </div>
-            `;
-          }
+          slide.innerHTML = `<img src="${proxyUrl}" loading="lazy">`;
         } else if (file.type === 'video') {
           const videoUrl = `https://drive.google.com/file/d/${file.id}/preview`;
           slide.innerHTML = `<div class="video-wrapper"><iframe src="${videoUrl}" allow="autoplay; fullscreen" allowfullscreen></iframe></div>`;
         }
+
         slider.appendChild(slide);
       });
     });
@@ -459,12 +469,13 @@ function closeGallery() {
   document.getElementById('slider-track').innerHTML = "";
 }
 
+/* NORMALIZE */
 function normalizeHandle(h){ return (h||"").trim().replace(/^@/,'').replace(/\s+/g,''); }
 function normalizeWhats(w){ return (w||"").replace(/[^\d]/g,'').replace(/^0/,'90'); }
 function normalizeTel(t){ return (t||"").replace(/\s+/g,''); }
 
-// EDIT: ürün bazlı WhatsApp mesajı (param opsiyonel)
-function orderOnWhatsApp(productTitle){
+/* WhatsApp: ürün bazlı (title + link) veya genel */
+function orderOnWhatsApp(productTitle = "", productLink = ""){
   const num = normalizeWhats(pageData.whats || pageData.phone);
   if(!num){
     alert("WhatsApp/Telefon numarası eklenmemiş. Yönetici panelinden ekleyin.");
@@ -473,12 +484,19 @@ function orderOnWhatsApp(productTitle){
 
   const msgLines = [];
   msgLines.push(`Merhaba, ${pageData.company || "işletme"} için teklif istiyorum.`);
+
   if(productTitle){
     msgLines.push(`Ürün: ${productTitle}`);
   }
+
+  if(productLink){
+    msgLines.push(`Ürün Linki: ${productLink}`);
+  }
+
   if(pageData.flashNew || pageData.flashOld){
     msgLines.push(`Anlık Kampanya: ${pageData.flashOld ? ("Eski: " + pageData.flashOld) : ""}${(pageData.flashOld && pageData.flashNew) ? " | " : ""}${pageData.flashNew ? ("Yeni: " + pageData.flashNew) : ""}`);
   }
+
   msgLines.push(`Katalog ID: ${currentID}`);
 
   const msg = encodeURIComponent(msgLines.join("\n"));
@@ -486,6 +504,7 @@ function orderOnWhatsApp(productTitle){
   window.open(url, "_blank");
 }
 
+/* ADMIN */
 function isAdminRemembered(){
   try{ return localStorage.getItem(storageKey("admin_ok")) === "1"; }
   catch(e){ return false; }
@@ -636,124 +655,15 @@ function saveData() {
     });
 }
 
+/* CARD MODAL */
 function openCardModal(){
-  prepareCardModal();
   document.getElementById('cardModal').style.display = 'flex';
 }
 function closeCardModal(){
   document.getElementById('cardModal').style.display = 'none';
-  document.getElementById('a2hsSteps').style.display = 'none';
 }
 
-function isIOS(){
-  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-}
-function isAndroid(){
-  return /Android/.test(navigator.userAgent);
-}
-function isSafari(){
-  const ua = navigator.userAgent;
-  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
-  return isSafari && isIOS();
-}
-
-function prepareCardModal(){
-  const a2hsText = document.getElementById('a2hsText');
-  if(isIOS()){
-    a2hsText.innerHTML = "iPhone/iPad: Safari’de <b>Paylaş</b> → <b>Ana Ekrana Ekle</b> ile kısayol ekleyebilirsin.";
-  } else if(isAndroid()){
-    a2hsText.innerHTML = "Android: Chrome’da <b>⋮</b> menüsü → <b>Ana ekrana ekle</b> ile kısayol ekleyebilirsin.";
-  } else {
-    a2hsText.innerHTML = "Tarayıcı menüsünden “Ana ekrana ekle / Kısayol oluştur” seçeneklerini kullanabilirsin.";
-  }
-
-  const box = document.getElementById('cardQuickLinks');
-  const tel = document.getElementById('quickTel');
-  const map = document.getElementById('quickMap');
-  const ins = document.getElementById('quickInsta');
-  const rev = document.getElementById('quickReview');
-  const web = document.getElementById('quickWeb');
-
-  let any = false;
-
-  if(pageData.phone){
-    tel.href = `tel:${normalizeTel(pageData.phone)}`;
-    tel.style.display = 'inline-block';
-    any = true;
-  } else tel.style.display='none';
-
-  if(pageData.maps){
-    map.href = pageData.maps;
-    map.style.display = 'inline-block';
-    any = true;
-  } else map.style.display='none';
-
-  if(pageData.insta){
-    const handle = normalizeHandle(pageData.insta);
-    ins.href = `https://instagram.com/${handle}`;
-    ins.style.display = 'inline-block';
-    any = true;
-  } else ins.style.display='none';
-
-  if(pageData.review){
-    rev.href = pageData.review;
-    rev.style.display = 'inline-block';
-    any = true;
-  } else rev.style.display='none';
-
-  web.href = window.location.href;
-  web.style.display = 'inline-block';
-  any = true;
-
-  box.style.display = any ? 'block' : 'none';
-}
-
-function showA2HSHelp(){
-  const steps = document.getElementById('a2hsSteps');
-  steps.style.display = 'block';
-
-  if(isIOS()){
-    steps.innerHTML = `
-      <div class="step">
-        <div class="step-ico"><i class="fas fa-share-square"></i></div>
-        <div class="step-text">Safari’de alttaki <b>Paylaş</b> ikonuna dokun.</div>
-      </div>
-      <div class="step">
-        <div class="step-ico"><i class="fas fa-plus"></i></div>
-        <div class="step-text"><b>Ana Ekrana Ekle</b> seçeneğini seç.</div>
-      </div>
-      <div class="step">
-        <div class="step-ico"><i class="fas fa-check"></i></div>
-        <div class="step-text">Sağ üstten <b>Ekle</b> diyerek bitir.</div>
-      </div>
-      <div class="mini" style="margin-top:10px;">
-        Not: iOS’ta bu işlem sadece kullanıcı onayıyla yapılabilir; web sayfası otomatik ekleyemez.
-      </div>
-    `;
-  } else if(isAndroid()){
-    steps.innerHTML = `
-      <div class="step">
-        <div class="step-ico"><i class="fas fa-ellipsis-vertical"></i></div>
-        <div class="step-text">Chrome’da sağ üst <b>⋮</b> menüsüne dokun.</div>
-      </div>
-      <div class="step">
-        <div class="step-ico"><i class="fas fa-house"></i></div>
-        <div class="step-text"><b>Ana ekrana ekle</b> / <b>Uygulama yükle</b> seçeneğini seç.</div>
-      </div>
-      <div class="step">
-        <div class="step-ico"><i class="fas fa-check"></i></div>
-        <div class="step-text"><b>Ekle</b> diyerek bitir.</div>
-      </div>
-    `;
-  } else {
-    steps.innerHTML = `
-      <div class="mini">
-        Tarayıcı menüsünden “Ana ekrana ekle / Kısayol oluştur / Install app” seçeneklerini kullanabilirsin.
-      </div>
-    `;
-  }
-}
-
+/* VCARD */
 function sanitizeVCardValue(s){
   return (s||"").replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/;/g,'\\;').replace(/,/g,'\\,');
 }
@@ -789,8 +699,8 @@ function buildVCard(){
 
   const w = normalizeWhats(whats || phone);
   if(w) noteParts.push(`WhatsApp: https://wa.me/${w}`);
-  noteParts.push(`Katalog ID: ${currentID}`);
 
+  noteParts.push(`Katalog ID: ${currentID}`);
   if(noteParts.length){
     lines.push(`NOTE:${sanitizeVCardValue(noteParts.join("\n"))}`);
   }
@@ -811,7 +721,6 @@ function saveToContacts(){
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
-
     a.click();
 
     setTimeout(() => {
@@ -822,49 +731,4 @@ function saveToContacts(){
     const dataUri = "data:text/vcard;charset=utf-8," + encodeURIComponent(vcf);
     window.location.href = dataUri;
   }
-}
-
-function showShareToast(message){
-  let toast = document.getElementById('shareToast');
-  if(!toast){
-    toast = document.createElement('div');
-    toast.id = 'shareToast';
-    toast.className = 'share-toast';
-    document.body.appendChild(toast);
-  }
-  toast.textContent = message;
-  toast.classList.add('show');
-  clearTimeout(toast.hideTimer);
-  toast.hideTimer = setTimeout(() => {
-    toast.classList.remove('show');
-  }, 1800);
-}
-
-function shareCatalog(){
-  const url = window.location.href;
-  const title = (document.getElementById('companyName')?.innerText || 'Dijital Katalog').trim();
-
-  if(navigator.share){
-    navigator.share({ title, url }).catch(() => {
-      showShareToast('Paylaşım iptal edildi.');
-    });
-    return;
-  }
-
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(url).then(() => {
-      showShareToast('Link panoya kopyalandı.');
-    }).catch(() => {
-      showShareToast('Link kopyalanamadı.');
-    });
-    return;
-  }
-
-  const temp = document.createElement('input');
-  temp.value = url;
-  document.body.appendChild(temp);
-  temp.select();
-  document.execCommand('copy');
-  document.body.removeChild(temp);
-  showShareToast('Link panoya kopyalandı.');
 }
