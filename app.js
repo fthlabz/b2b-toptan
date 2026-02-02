@@ -483,15 +483,15 @@ function orderOnWhatsApp(productTitle = "", productLink = ""){
   }
 
   const msgLines = [];
-  msgLines.push(`Merhaba, ${pageData.company || "işletme"} için teklif istiyorum.`);
+  msgLines.push(`Merhaba`);
 
-  if(productTitle){
-    msgLines.push(`Ürün: ${productTitle}`);
-  }
+  //if(productTitle){
+  //  msgLines.push(`Ürün: ${productTitle}`);
+  //}
 
-  if(productLink){
-    msgLines.push(`Ürün Linki: ${productLink}`);
-  }
+  //if(productLink){
+   // msgLines.push(`Ürün Linki: ${productLink}`);
+  //}
 
   //if(pageData.flashNew || pageData.flashOld){
   // msgLines.push(`Anlık Kampanya: ${pageData.flashOld ? ("Eski: " + pageData.flashOld) : ""}${(pageData.flashOld && pageData.flashNew) ? " | " : ""}${pageData.flashNew ? ("Yeni: " + pageData.flashNew) : ""}`);
