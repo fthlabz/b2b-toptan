@@ -1752,3 +1752,14 @@ body{
 .certificate .vcard-shell #vcardSub{
   color: rgba(255,255,255,.85) !important;
 }
+
+.legal-text{
+  margin-top: 40px;          /* kalemden aşağı mesafe */
+  padding: 14px 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: rgba(15,23,42,.55);
+  background: rgba(241,245,249,.7);
+  border: 1px dashed rgba(148,163,184,.35);
+  border-radius: 14px;
+}
