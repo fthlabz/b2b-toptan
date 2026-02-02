@@ -1763,3 +1763,9 @@ body{
   border: 1px dashed rgba(148,163,184,.35);
   border-radius: 14px;
 }
+
+/* Digital V Card – Ana Ekrana Kısayol GİZLE */
+#cardModal .card-box:has(.fa-house),
+#cardModal .card-box:has(#a2hsText) {
+  display: none !important;
+}
