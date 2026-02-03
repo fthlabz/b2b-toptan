@@ -327,7 +327,7 @@ function renderFeatured(){
             <div class="grid-media">
               <img src="${thumb}" alt="">
             </div>
-            <div class="grid-caption">${escapeHtml(name)}</div>
+            <div class="grid-caption">🛍️</div>
           `;
 
           // tık: overlay preview
@@ -389,7 +389,7 @@ function openMediaModal(payload){
   const title = document.getElementById('mediaModalTitle');
   if(!modal || !body || !title) return;
 
-  title.innerText = payload.title || (payload.context === 'vitrin' ? 'Vitrin' : '☑️');
+  title.innerText = payload.title || (payload.context === 'vitrin' ? 'Vitrin' : 'ürün');
 
   let mediaHtml = "";
   if(payload.mediaType === 'video'){
