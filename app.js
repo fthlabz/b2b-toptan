@@ -283,7 +283,7 @@ function renderGrids(){
 }
 
 /* --- FEATURED (Kurumsal Görseller / Katalog Sayfaları) --- */
-function renderFeatured(){
+  function renderFeatured(){
   const grid = document.getElementById('featuredGrid');
   if(!grid) return;
   const link = (pageData.daily || "").trim();
@@ -303,16 +303,24 @@ function renderFeatured(){
            card.className = 'grid-card featured-card';
            const thumb = driveThumb(file.id, 800);
            
+           // Video ikonunu gösterelim ki video olduğu belli olsun
+           const playIcon = (file.type === 'video') 
+             ? '<div class="vitrin-play" style="font-size:14px;"><i class="fas fa-play"></i></div>' 
+             : '';
+
            card.innerHTML = `
              <div class="grid-media">
                 <img src="${thumb}" alt="">
+                ${playIcon}
              </div>
              <div class="grid-caption" style="text-align:center;">İncele</div>
            `;
+           
+           // Tıklayınca türüne göre aç
            card.onclick = () => openMediaModal({
              title: "Kurumsal",
-             mediaType: 'image',
-             src: thumb,
+             mediaType: (file.type === 'video') ? 'video' : 'image',
+             src: (file.type === 'video') ? `https://drive.google.com/file/d/${file.id}/preview` : thumb,
              realId: file.id,
              metaHtml: ""
            });
